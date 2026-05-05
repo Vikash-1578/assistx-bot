@@ -1,0 +1,41 @@
+# requirements.txt (Stable + Future Ready)
+
+# Core Framework
+fastapi
+uvicorn[standard]
+python-telegram-bot==21.*
+python-dotenv
+httpx
+requests
+
+# Database / Storage
+sqlalchemy
+aiofiles
+
+# Audio Processing
+pydub
+ffmpeg-python
+
+# Easy TTS Engines
+edge-tts
+gTTS
+pyttsx3
+
+# Google / Cloud APIs
+google-cloud-texttospeech
+
+# Optional AI / Advanced Engines
+torch
+torchaudio
+transformers
+accelerate
+numpy
+scipy
+sentencepiece
+
+# Coqui XTTS / TTS
+TTS
+
+# Utilities
+python-multipart
+jinja2
