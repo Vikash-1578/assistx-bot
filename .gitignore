@@ -1,0 +1,40 @@
+# --- Secrets ---
+.env
+.env.*
+!.env.example
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.so
+build/
+dist/
+*.egg-info/
+
+# --- Virtual env ---
+.venv/
+venv/
+
+# --- Data / runtime ---
+data/*.db
+data/*.db-journal
+logs/
+*.log
+*.log.*
+
+# --- Caches ---
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# --- Editors ---
+.vscode/
+.idea/
+*.swp
+
+# --- OS ---
+.DS_Store
+
+# --- Telegram sessions ---
+*.session
+*.session-journal
