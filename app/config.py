@@ -85,6 +85,7 @@ class ProviderSettings(_Base):
     model_freelance: str = ""
     model_reasoning: str = ""
     model_summary: str = ""
+    model_vision: str = ""
 
     def model_for(self, task: str) -> str:
         return getattr(self, f"model_{task}", "") or self.model_chat

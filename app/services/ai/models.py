@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Literal
+from typing import Any, Literal
 
 
 class TaskType(str, Enum):
@@ -13,18 +13,47 @@ class TaskType(str, Enum):
     FREELANCE = "freelance"
     REASONING = "reasoning"
     SUMMARY = "summary"
+    VISION = "vision"
 
 
 Role = Literal["system", "user", "assistant"]
+
+ContentType = str | list[dict[str, Any]]
 
 
 @dataclass(slots=True)
 class ChatMessage:
     role: Role
-    content: str
+    content: ContentType
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         return {"role": self.role, "content": self.content}
+
+    @classmethod
+    def text(cls, role: Role, text: str) -> "ChatMessage":
+        return cls(role=role, content=text)
+
+    @classmethod
+    def with_images(
+        cls,
+        role: Role,
+        text: str,
+        images_b64: list[str],
+        mime: str = "image/jpeg",
+    ) -> "ChatMessage":
+        """Build an OpenAI-compatible multimodal message."""
+        parts: list[dict[str, Any]] = [{"type": "text", "text": text}]
+        for b64 in images_b64:
+            parts.append(
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:{mime};base64,{b64}",
+                        "detail": "high",
+                    },
+                }
+            )
+        return cls(role=role, content=parts)
 
 
 @dataclass(slots=True)
@@ -37,18 +66,6 @@ class AIResponse:
     output_tokens: int = 0
     total_tokens: int = 0
     latency_ms: int = 0
-
-
-@dataclass(slots=True)
-class ProviderHealth:
-    name: str
-    enabled: bool
-    healthy: bool
-    consecutive_failures: int = 0
-    cooldown_until: float = 0.0
-    requests_today: int = 0
-    daily_limit: int = 0
-    remaining: int = 0
 
 
 @dataclass(slots=True)

@@ -58,3 +58,22 @@ def read_text_safely(path: Path, max_chars: int = 8000) -> str:
     except Exception as e:
         log.warning("read_text_failed path=%s err=%s", path, e)
         return ""
+
+
+# ------------------------------------------------------------------
+# Image helpers
+# ------------------------------------------------------------------
+MAX_IMAGE_BYTES = 5 * 1024 * 1024  # 5 MB
+
+ALLOWED_IMAGE_MIMES = {
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/webp": ".webp",
+}
+
+
+def validate_image_size(size: int | None) -> bool:
+    """Return True if image is within allowed size."""
+    if size is None:
+        return True
+    return size <= MAX_IMAGE_BYTES

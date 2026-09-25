@@ -1,8 +1,5 @@
 """
 AgentRouter — maps user intent to TaskType + system prompt + AI call.
-
-This is the single bridge between Telegram handlers and the AIEngine.
-Handlers should never touch providers or prompts directly.
 """
 from __future__ import annotations
 
@@ -24,13 +21,13 @@ _PROMPT_FILES: dict[TaskType, str] = {
     TaskType.FREELANCE: "freelance_system.txt",
     TaskType.SUMMARY: "summary_system.txt",
     TaskType.REASONING: "reasoning_system.txt",
+    TaskType.VISION: "vision_system.txt",
 }
 
 _PROMPT_CACHE: dict[TaskType, str] = {}
 
 
 def load_prompt(task: TaskType) -> str:
-    """Load and cache system prompt for the given task."""
     if task in _PROMPT_CACHE:
         return _PROMPT_CACHE[task]
     filename = _PROMPT_FILES.get(task)
@@ -57,12 +54,9 @@ class AgentRouter:
         history: list[ChatMessage] | None = None,
         user_id: int | None = None,
         extra_system: str | None = None,
+        images_b64: list[str] | None = None,
+        image_mime: str = "image/jpeg",
     ) -> AIResponse:
-        """
-        Build the message list and delegate to AIEngine.
-
-        history: previous turns (short-term), already in chronological order.
-        """
         system_prompt = load_prompt(task)
         if extra_system:
             system_prompt = f"{system_prompt}\n\n{extra_system}"
@@ -72,7 +66,15 @@ class AgentRouter:
         ]
         if history:
             messages.extend(history)
-        messages.append(ChatMessage(role="user", content=user_text))
+
+        if images_b64:
+            messages.append(
+                ChatMessage.with_images(
+                    "user", user_text, images_b64, image_mime
+                )
+            )
+        else:
+            messages.append(ChatMessage(role="user", content=user_text))
 
         try:
             return await self.engine.generate(

@@ -95,7 +95,16 @@ class AIEngine:
         model = st.settings.model_for(task.value)
         if not model:
             score += 10_000.0
+        # Vision: boost preferred providers
+        if task == TaskType.VISION:
+            if st.name in self._VISION_PREFERRED:
+                score -= 1000.0  # big boost
+            else:
+                score += 500.0   # deprioritize
         return score
+
+    # Providers best at vision — tried first for VISION task
+    _VISION_PREFERRED = ["gemini", "nvidia", "sambanova", "openrouter", "cerebras", "groq"]
 
     async def _select(self, task: TaskType) -> list[_ProviderState]:
         async with self._lock:
@@ -107,6 +116,8 @@ class AIEngine:
                     continue
                 usage = await self.quota.snapshot(st.name, st.settings.daily_quota)
                 if usage["remaining"] <= 0:
+                    continue
+                if task == TaskType.VISION and not st.settings.model_vision:
                     continue
                 s = await self._score(st, task)
                 scored.append((s, st))

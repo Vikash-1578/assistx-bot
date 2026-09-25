@@ -20,16 +20,17 @@ from app.utils.logging import get_logger
 log = get_logger(__name__)
 router = Router(name="files")
 
+# Extensions that images handler owns — files handler must skip these
+_IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp"}
+
 
 def _extract_text(path, filename: str) -> str:
-    """Extract text from a supported file. Never raises."""
     suffix = filename.lower().rsplit(".", 1)[-1] if "." in filename else ""
     try:
         if is_text_file(filename):
             return read_text_safely(path, max_chars=8000)
         if suffix == "pdf":
             from pypdf import PdfReader
-
             reader = PdfReader(str(path))
             chunks: list[str] = []
             for page in reader.pages[:20]:
@@ -39,7 +40,6 @@ def _extract_text(path, filename: str) -> str:
             return "\n".join(chunks)[:8000]
         if suffix == "docx":
             from docx import Document
-
             doc = Document(str(path))
             chunks = [p.text for p in doc.paragraphs[:200]]
             return "\n".join(chunks)[:8000]
@@ -61,10 +61,15 @@ async def handle_document(
     filename = doc.file_name or "file"
     size = doc.file_size or 0
 
+    # Skip images — handled by images handler
+    ext = "." + filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+    if ext in _IMAGE_EXTS:
+        return
+
     if size > MAX_FILE_SIZE_BYTES:
         await message.answer(
             f"⚠ File too large ({size // 1024} KB). "
-            f"Max allowed: {MAX_FILE_SIZE_BYTES // (1024 * 1024)} MB."
+            f"Max: {MAX_FILE_SIZE_BYTES // (1024 * 1024)} MB."
         )
         return
 
@@ -90,14 +95,11 @@ async def handle_document(
 
         text = _extract_text(tmp_path, filename)
         if not text.strip():
-            await placeholder.edit_text(
-                "⚠ Could not extract text from this file."
-            )
+            await placeholder.edit_text("⚠ Could not extract text from this file.")
             return
 
         user_prompt = (message.caption or "").strip() or (
-            "Analyze this file and give me a concise summary, "
-            "plus key points if relevant."
+            "Analyze this file and give me a concise summary, plus key points."
         )
         full_prompt = f"{user_prompt}\n\n--- FILE: {filename} ---\n{text}"
 
@@ -119,7 +121,6 @@ async def handle_document(
             await placeholder.delete()
         except Exception:
             pass
-
     except Exception as e:
         log.exception("file_handler_error user_id=%s err=%s", message.from_user.id, e)
         try:

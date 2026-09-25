@@ -24,6 +24,7 @@ from app.handlers import code as code_h
 from app.handlers import content as content_h
 from app.handlers import errors as errors_h
 from app.handlers import files as files_h
+from app.handlers import images as images_h
 from app.handlers import freelance as freelance_h
 from app.handlers import start as start_h
 from app.handlers import summary as summary_h
@@ -98,6 +99,7 @@ class Application:
         self.dp.include_router(content_h.router)
         self.dp.include_router(summary_h.router)
         self.dp.include_router(files_h.router)
+        self.dp.include_router(images_h.router)
         self.dp.include_router(chat_h.router)  # last: catch-all text
         self.dp.include_router(errors_h.router)
 
