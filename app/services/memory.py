@@ -1,11 +1,5 @@
 """
 Short-term conversation memory (in-RAM, per-user, bounded).
-
-Design:
-- Keeps last N messages per user (default 10).
-- Older messages are dropped (future: summarize).
-- Not persisted across restarts (intentional — v1).
-- Long-term memory via vector store is a later addition.
 """
 from __future__ import annotations
 
@@ -16,7 +10,7 @@ from app.utils.logging import get_logger
 
 log = get_logger(__name__)
 
-MAX_HISTORY_MESSAGES = 10
+MAX_HISTORY_MESSAGES = 30
 
 
 class MemoryStore:
