@@ -154,6 +154,15 @@ class NvidiaSettings(ProviderSettings):
     )
 
 
+class FreeLLMAPISettings(ProviderSettings):
+    model_config = SettingsConfigDict(
+        env_prefix="FREELLMAPI_",
+        env_file=".env",
+        extra="ignore",
+        protected_namespaces=(),
+    )
+
+
 class VectorSettings(_Base):
     backend: Literal["qdrant", "memory", "pinecone"] = Field(
         "memory", alias="VECTOR_BACKEND"
@@ -198,6 +207,7 @@ class Settings(_Base):
     sambanova: SambaNovaSettings = Field(default_factory=SambaNovaSettings)
     huggingface: HuggingFaceSettings = Field(default_factory=HuggingFaceSettings)
     nvidia: NvidiaSettings = Field(default_factory=NvidiaSettings)
+    freellmapi: FreeLLMAPISettings = Field(default_factory=FreeLLMAPISettings)
 
     @model_validator(mode="after")
     def _at_least_one_provider(self) -> "Settings":
@@ -209,6 +219,7 @@ class Settings(_Base):
             self.sambanova,
             self.huggingface,
             self.nvidia,
+            self.freellmapi,
         ]
         usable = [p for p in providers if p.enabled and p.api_key]
         if not usable:
@@ -232,6 +243,7 @@ class Settings(_Base):
             "sambanova": self.sambanova,
             "huggingface": self.huggingface,
             "nvidia": self.nvidia,
+            "freellmapi": self.freellmapi,
         }
 
 

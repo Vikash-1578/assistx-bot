@@ -8,6 +8,7 @@ from app.services.ai.providers.gemini import GeminiProvider
 from app.services.ai.providers.groq import GroqProvider
 from app.services.ai.providers.huggingface import HuggingFaceProvider
 from app.services.ai.providers.nvidia import NvidiaProvider
+from app.services.ai.providers.freellmapi import FreeLLMAPIProvider
 from app.services.ai.providers.openrouter import OpenRouterProvider
 from app.services.ai.providers.sambanova import SambaNovaProvider
 from app.utils.logging import get_logger
@@ -56,6 +57,13 @@ def build_providers(settings: Settings) -> dict[str, BaseProvider]:
         providers["nvidia"] = NvidiaProvider(
             settings.nvidia.api_key,
             settings.nvidia.base_url,
+            timeout,
+        )
+
+    if settings.freellmapi.enabled and settings.freellmapi.base_url:
+        providers["freellmapi"] = FreeLLMAPIProvider(
+            settings.freellmapi.api_key or "local",
+            settings.freellmapi.base_url,
             timeout,
         )
 
