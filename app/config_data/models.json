@@ -1,0 +1,47 @@
+{
+  "_help": "Add a model = add one entry in 'models'. tier: 1 strongest, 2 solid, 3 fast. tasks: what it is good at (omit = all text tasks). vision: true if it can read images. priority: lower is tried first inside a tier. Run scripts/check_keys.py to see which of these your keys can really use.",
+  "providers": {
+    "groq":        {"base_url": "https://api.groq.com/openai/v1", "daily_quota": 1000},
+    "gemini":      {"base_url": "https://generativelanguage.googleapis.com/v1beta/openai", "daily_quota": 250},
+    "openrouter":  {"base_url": "https://openrouter.ai/api/v1", "daily_quota": 50,
+                    "headers": {"HTTP-Referer": "https://github.com/Vikash-1578/assistx-bot", "X-Title": "AssistX"}},
+    "cerebras":    {"base_url": "https://api.cerebras.ai/v1", "daily_quota": 1000},
+    "sambanova":   {"base_url": "https://api.sambanova.ai/v1", "daily_quota": 500},
+    "nvidia":      {"base_url": "https://integrate.api.nvidia.com/v1", "daily_quota": 1000},
+    "mistral":     {"base_url": "https://api.mistral.ai/v1", "daily_quota": 500},
+    "cohere":      {"base_url": "https://api.cohere.ai/compatibility/v1", "daily_quota": 300},
+    "huggingface": {"base_url": "https://router.huggingface.co/v1", "daily_quota": 100}
+  },
+  "models": [
+    {"id": "groq-gpt-oss-120b",   "provider": "groq", "model": "openai/gpt-oss-120b", "tier": 1, "priority": 10, "tasks": ["chat", "code", "reasoning", "content", "freelance", "summary"]},
+    {"id": "groq-llama-70b",      "provider": "groq", "model": "llama-3.3-70b-versatile", "tier": 2, "priority": 10},
+    {"id": "groq-qwen3-32b",      "provider": "groq", "model": "qwen/qwen3-32b", "tier": 2, "priority": 20, "tasks": ["chat", "code", "reasoning"]},
+    {"id": "groq-llama-8b",       "provider": "groq", "model": "llama-3.1-8b-instant", "tier": 3, "priority": 10},
+    {"id": "groq-llama4-scout",   "provider": "groq", "model": "meta-llama/llama-4-scout-17b-16e-instruct", "tier": 2, "priority": 30, "vision": true},
+
+    {"id": "gemini-flash",        "provider": "gemini", "model": "gemini-2.5-flash", "tier": 1, "priority": 20, "vision": true},
+    {"id": "gemini-flash-lite",   "provider": "gemini", "model": "gemini-2.5-flash-lite", "tier": 3, "priority": 20, "vision": true},
+
+    {"id": "cerebras-gpt-oss",    "provider": "cerebras", "model": "gpt-oss-120b", "tier": 1, "priority": 30},
+    {"id": "cerebras-llama-70b",  "provider": "cerebras", "model": "llama-3.3-70b", "tier": 2, "priority": 30},
+
+    {"id": "sambanova-llama-70b", "provider": "sambanova", "model": "Meta-Llama-3.3-70B-Instruct", "tier": 2, "priority": 40},
+    {"id": "sambanova-deepseek",  "provider": "sambanova", "model": "DeepSeek-V3-0324", "tier": 1, "priority": 40, "tasks": ["chat", "code", "reasoning", "content"]},
+
+    {"id": "nvidia-llama-70b",    "provider": "nvidia", "model": "meta/llama-3.3-70b-instruct", "tier": 2, "priority": 50},
+    {"id": "nvidia-nemotron-70b", "provider": "nvidia", "model": "nvidia/llama-3.1-nemotron-70b-instruct", "tier": 1, "priority": 50},
+    {"id": "nvidia-llama-vision", "provider": "nvidia", "model": "meta/llama-3.2-11b-vision-instruct", "tier": 2, "priority": 60, "vision": true},
+
+    {"id": "mistral-large",       "provider": "mistral", "model": "mistral-large-latest", "tier": 1, "priority": 60},
+    {"id": "mistral-small",       "provider": "mistral", "model": "mistral-small-latest", "tier": 3, "priority": 60},
+    {"id": "mistral-pixtral",     "provider": "mistral", "model": "pixtral-large-latest", "tier": 2, "priority": 70, "vision": true},
+
+    {"id": "cohere-command-a",    "provider": "cohere", "model": "command-a-03-2025", "tier": 2, "priority": 70},
+
+    {"id": "openrouter-free",     "provider": "openrouter", "model": "openrouter/free", "tier": 3, "priority": 80},
+    {"id": "openrouter-llama-70b-free", "provider": "openrouter", "model": "meta-llama/llama-3.3-70b-instruct:free", "tier": 2, "priority": 80},
+
+    {"id": "hf-qwen-coder",       "provider": "huggingface", "model": "Qwen/Qwen2.5-Coder-32B-Instruct", "tier": 2, "priority": 90, "tasks": ["code"]},
+    {"id": "hf-llama-70b",        "provider": "huggingface", "model": "meta-llama/Llama-3.3-70B-Instruct", "tier": 2, "priority": 90}
+  ]
+}

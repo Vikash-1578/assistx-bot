@@ -133,7 +133,10 @@ class OpenAICompatibleProvider(BaseProvider):
             raise ProviderError(
                 self.name, "no choices in response", retryable=False
             )
-        content = (choices[0].get("message") or {}).get("content") or ""
+        choice = choices[0]
+        content = (choice.get("message") or {}).get("content") or ""
+        if not isinstance(content, str):
+            content = ""
         usage = data.get("usage") or {}
         return AIResponse(
             text=content.strip(),
@@ -144,4 +147,5 @@ class OpenAICompatibleProvider(BaseProvider):
             output_tokens=int(usage.get("completion_tokens") or 0),
             total_tokens=int(usage.get("total_tokens") or 0),
             latency_ms=int(latency),
+            finish_reason=str(choice.get("finish_reason") or ""),
         )

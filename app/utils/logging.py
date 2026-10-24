@@ -12,8 +12,10 @@ import re
 import sys
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from app.config import LoggingSettings
+if TYPE_CHECKING:  # keeps this module importable without pydantic-settings
+    from app.config import LoggingSettings
 
 _REDACT_PATTERNS = [
     re.compile(r"(sk-[A-Za-z0-9_\-]{10,})"),
