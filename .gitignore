@@ -38,3 +38,6 @@ logs/
 # --- Telegram sessions ---
 *.session
 *.session-journal
+
+# --- API keys (NEVER commit) ---
+keys.txt

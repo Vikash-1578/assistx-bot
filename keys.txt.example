@@ -1,0 +1,8 @@
+# One key per line:  provider:key        (lines starting with # are ignored)
+# Providers: groq gemini cerebras sambanova nvidia mistral cohere openrouter hf
+# Several keys for one provider = more free daily limit (rotated automatically).
+groq:gsk_xxxxxxxxxxxxxxxxxxxx
+groq:gsk_yyyyyyyyyyyyyyyyyyyy
+gemini:AIzaxxxxxxxxxxxxxxxxxxxx
+cerebras:csk-xxxxxxxxxxxxxxxx
+openrouter:sk-or-v1-xxxxxxxx

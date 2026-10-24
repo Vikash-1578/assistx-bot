@@ -37,7 +37,9 @@ from app.services.ai.engine import AIEngine
 from app.services.ai.factory import build_providers
 from app.services.ai.quota import QuotaTracker
 from app.services.health_server import HealthServer
+from app.services.ai.pool_engine import build_pool_engine
 from app.services.memory import MemoryStore
+from app.services.memory_backends import build_memory_backend
 from app.utils.logging import configure_logging, get_logger
 from app.utils.security import AllowList, RateLimiter
 
@@ -49,9 +51,9 @@ class Application:
         self.settings = settings
         self.bot: Bot | None = None
         self.dp: Dispatcher | None = None
-        self.engine: AIEngine | None = None
+        self.engine: Any = None
         self.router: AgentRouter | None = None
-        self.memory = MemoryStore()
+        self.memory = MemoryStore(max_messages=settings.memory.max_messages)
         self.quota: QuotaTracker | None = None
         self.health: HealthServer | None = None
         self._shutdown = asyncio.Event()
@@ -64,11 +66,28 @@ class Application:
         await self.quota.init()
 
         # --- Providers + Engine ---
-        providers = build_providers(s)
-        if not providers:
-            raise RuntimeError("No providers built from settings.")
-        self.engine = AIEngine(s, providers, self.quota)
-        self.router = AgentRouter(self.engine)
+        if s.ai.has_pool_keys():
+            # many keys / many models (keys.txt or AI_KEYS)
+            self.engine = build_pool_engine(s, self.quota)
+            log.info("engine=pool %s", self.engine.summary())
+            providers: dict[str, Any] = {"pool": None}
+        else:
+            providers = build_providers(s)
+            if not providers:
+                raise RuntimeError("No providers built from settings.")
+            self.engine = AIEngine(s, providers, self.quota)
+        self.router = AgentRouter(
+            self.engine,
+            smart_enabled=s.ai.smart_enabled,
+            max_escalations=s.ai.smart_max_escalations,
+        )
+
+        # --- Persistent memory ---
+        backend = build_memory_backend(s.memory)
+        if backend is not None:
+            await backend.init()
+        self.memory.backend = backend
+        self.memory.set_summarizer(self.router.summarize_history)
 
         # --- Bot + Dispatcher ---
         self.bot = Bot(
@@ -169,6 +188,10 @@ class Application:
         except Exception as e:
             log.warning("bot_close_error err=%s", e)
 
+        try:
+            await self.memory.close()
+        except Exception as e:
+            log.warning("memory_close_error err=%s", e)
         if self.engine is not None:
             await self.engine.close()
         if self.quota is not None:

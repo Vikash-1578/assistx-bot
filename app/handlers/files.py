@@ -6,6 +6,7 @@ from aiogram.types import Message
 
 from app.services.agent_router import AgentRouter
 from app.services.ai.models import TaskType
+from app.handlers.reply import send_reply
 from app.services.memory import MemoryStore
 from app.utils.files import (
     MAX_FILE_SIZE_BYTES,
@@ -110,12 +111,7 @@ async def handle_document(
             extra_system="You are analyzing an uploaded file for a Telegram user.",
         )
 
-        reply = response.text or "(empty response)"
-        if len(reply) > 4000:
-            for i in range(0, len(reply), 4000):
-                await message.answer(reply[i : i + 4000])
-        else:
-            await message.answer(reply)
+        await send_reply(message, response.text)
 
         try:
             await placeholder.delete()

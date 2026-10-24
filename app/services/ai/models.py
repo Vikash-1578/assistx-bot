@@ -66,6 +66,10 @@ class AIResponse:
     output_tokens: int = 0
     total_tokens: int = 0
     latency_ms: int = 0
+    # Filled by PoolEngine / providers; default values keep old code working.
+    entry_id: str = ""
+    tier: int = 0
+    finish_reason: str = ""
 
 
 @dataclass(slots=True)

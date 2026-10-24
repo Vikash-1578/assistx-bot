@@ -69,6 +69,42 @@ class AISettings(_Base):
     user_concurrency: int = Field(1, alias="USER_AI_CONCURRENCY")
     quota_db_path: str = Field("data/ai_usage.db", alias="AI_QUOTA_DB")
 
+    # --- multi-key / multi-model pool ---
+    keys_file: str = Field("keys.txt", alias="AI_KEYS_FILE")
+    keys_inline: str = Field("", alias="AI_KEYS")
+    models_file: str = Field("", alias="AI_MODELS_FILE")
+    key_rotations: int = Field(4, alias="AI_KEY_ROTATIONS")
+
+    # --- smart answering layer ---
+    smart_enabled: bool = Field(True, alias="SMART_ENABLED")
+    smart_max_escalations: int = Field(2, alias="SMART_MAX_ESCALATIONS")
+
+    def has_pool_keys(self) -> bool:
+        """True if AI_KEYS or the keys file contains at least one key."""
+        from pathlib import Path
+
+        from app.services.ai.keypool import parse_keys
+
+        if parse_keys(self.keys_inline):
+            return True
+        if self.keys_file:
+            p = Path(self.keys_file)
+            if p.is_file():
+                return bool(
+                    parse_keys(p.read_text(encoding="utf-8", errors="ignore"))
+                )
+        return False
+
+
+class MemorySettings(_Base):
+    backend: Literal["sqlite", "supabase", "ram"] = Field(
+        "sqlite", alias="MEMORY_BACKEND"
+    )
+    db_path: str = Field("data/memory.db", alias="MEMORY_DB")
+    max_messages: int = Field(30, alias="MEMORY_MAX_MESSAGES")
+    supabase_url: str = Field("", alias="SUPABASE_URL")
+    supabase_key: str = Field("", alias="SUPABASE_SERVICE_KEY")
+
 
 class ProviderSettings(_Base):
     """Per-provider configuration block."""
@@ -196,6 +232,7 @@ class Settings(_Base):
 
     telegram: TelegramSettings = Field(default_factory=TelegramSettings)
     ai: AISettings = Field(default_factory=AISettings)
+    memory: MemorySettings = Field(default_factory=MemorySettings)
     vector: VectorSettings = Field(default_factory=VectorSettings)
     health: HealthSettings = Field(default_factory=HealthSettings)
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
@@ -222,10 +259,10 @@ class Settings(_Base):
             self.freellmapi,
         ]
         usable = [p for p in providers if p.enabled and p.api_key]
-        if not usable:
+        if not usable and not self.ai.has_pool_keys():
             raise ValueError(
-                "No AI provider is configured. "
-                "Enable at least one provider and provide its API key."
+                "No AI provider is configured. Enable at least one provider "
+                "and provide its API key, or add keys to AI_KEYS / keys.txt."
             )
         for p in providers:
             if p.enabled and not p.api_key:

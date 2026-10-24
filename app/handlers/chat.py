@@ -8,7 +8,8 @@ from aiogram.types import Message
 from app.services.agent_router import AgentRouter
 from app.services.ai.exceptions import AllProvidersFailed
 from app.services.ai.models import TaskType
-from app.services.memory import MemoryStore
+from app.handlers.reply import send_reply
+from app.services.memory import MemoryStore, extract_fact_request
 from app.utils.logging import get_logger
 from app.utils.security import sanitize_user_text
 
@@ -33,6 +34,14 @@ async def _run_ai(
         await message.answer("⚠ Please send some text.")
         return
 
+    await memory.ensure_loaded(user_id)
+
+    # "yaad rakhna ki ..." -> store as a permanent fact
+    if task == TaskType.CHAT and use_history:
+        fact = extract_fact_request(text)
+        if fact and memory.add_fact(user_id, fact):
+            log.info("fact_saved user_id=%s", user_id)
+
     placeholder = await message.answer("⏳ Processing...")
 
     try:
@@ -42,17 +51,15 @@ async def _run_ai(
             task=task,
             history=history,
             user_id=user_id,
+            extra_system=memory.context_block(user_id) if use_history else None,
+            auto_task=use_history,
         )
-        memory.add_user(user_id, text)
-        memory.add_assistant(user_id, response.text)
+        if use_history:
+            memory.add_user(user_id, text)
+            memory.add_assistant(user_id, response.text)
+            memory.schedule_compaction(user_id)
 
-        reply = response.text or "(empty response)"
-        if len(reply) > 4000:
-            # Telegram limit ~4096; chunk if needed
-            for i in range(0, len(reply), 4000):
-                await message.answer(reply[i : i + 4000])
-        else:
-            await message.answer(reply)
+        await send_reply(message, response.text)
 
         try:
             await placeholder.delete()

@@ -10,6 +10,7 @@ from aiogram.types import Message
 from app.services.agent_router import AgentRouter
 from app.services.ai.exceptions import AllProvidersFailed
 from app.services.ai.models import TaskType
+from app.handlers.reply import send_reply
 from app.services.memory import MemoryStore
 from app.utils.files import MAX_IMAGE_BYTES, validate_image_size
 from app.utils.logging import get_logger
@@ -71,9 +72,10 @@ async def _analyze(
             images_b64=[b64],
             image_mime=mime,
         )
+        await memory.ensure_loaded(user_id)
         memory.add_user(user_id, f"[Image] {caption}")
         memory.add_assistant(user_id, response.text)
-        await _reply_chunks(message, response.text or "(empty response)")
+        await send_reply(message, response.text)
         try:
             await placeholder.delete()
         except Exception:
